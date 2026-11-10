@@ -1,0 +1,521 @@
+/* =====================================================================
+   WolfFoodTracker.css  -  more spacing + uses the whole screen
+   Sections: 1) Settings  2) Page  3) Header  4) Layout  5) Today card
+             6) Search + chips  7) Results  8) Meals log  9) Popup
+   ===================================================================== */
+
+
+/* ---------------------------------------------------------------------
+   1) SETTINGS - change colors and sizes HERE
+   --------------------------------------------------------------------- */
+.wf-root {
+  --bg-color: #080f1d;
+  --card-color: #121d33;
+  --card-border: #22314d;
+  --accent: #22e5ff;            /* cyan                    */
+  --text-muted: #8fa3bb;
+  --warn: #ffb02e;
+  --danger: #ff5d73;
+
+  --kcal-color: #ff9d2e;        /* total card glow         */
+  --protein-color: #a78bfa;
+  --carbs-color: #1fd1c4;
+  --fat-color: #ff9d2e;
+
+  /* SPACING - make these bigger/smaller to add or remove air */
+  --side-padding: clamp(18px, 4vw, 64px);   /* left/right margin of the page */
+  --space: clamp(22px, 3vw, 40px);          /* gap between the big blocks    */
+  --card-padding: clamp(20px, 2.6vw, 32px); /* inside every card             */
+  --radius: 22px;
+}
+
+
+/* ---------------------------------------------------------------------
+   2) PAGE
+   --------------------------------------------------------------------- */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: none;
+  display: block;
+  text-align: left;
+  background: #080f1d;
+}
+
+.wf-root {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;                /* safety: never scroll sideways */
+  color: white;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background:
+    radial-gradient(900px 420px at 50% -120px, rgba(34,229,255,.14), transparent 70%),
+    var(--bg-color);
+  padding:
+    calc(22px + env(safe-area-inset-top, 0px))
+    calc(var(--side-padding) + env(safe-area-inset-right, 0px))
+    calc(56px + env(safe-area-inset-bottom, 0px))
+    calc(var(--side-padding) + env(safe-area-inset-left, 0px));
+}
+
+.wf-root,
+.wf-root * { box-sizing: border-box; }   /* padding no longer makes the page wider than the screen */
+.wf-root h2, .wf-root h3, .wf-root h4, .wf-root p { margin: 0; }
+
+
+/* ---------------------------------------------------------------------
+   3) HEADER
+   --------------------------------------------------------------------- */
+.wf-back {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--card-color);
+  border: 1px solid var(--card-border);
+margin-bottom: 24px;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.wf-back svg   { width: 22px; height: 18px; }
+.wf-back:hover { border-color: var(--accent); }
+
+.wf-page-title {
+  margin: 24px 0 var(--space);
+  margin-bottom: 24px !important;
+  font-size: clamp(24px, 3.6vw, 40px);
+  font-weight: 800;
+  letter-spacing: .5px;
+  line-height: 1.15;
+}
+
+
+/* ---------------------------------------------------------------------
+   4) LAYOUT
+   Phone:   total / search+results / meals      (one column)
+   Desktop: [ search + results  |  total ]
+            [ search + results  |  meals ]
+   --------------------------------------------------------------------- */
+.wf-layout > * { min-width: 0; }      /* stops wide content from stretching the column */
+
+.wf-layout {
+  display: grid;
+  gap: var(--space);
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1700px;
+  margin: 0 auto;
+}
+
+@media (min-width: 960px) {
+  .wf-layout {
+    grid-template-columns: minmax(0, 1.7fr) minmax(340px, 1fr);
+    grid-template-areas:
+      "main summary"
+      "main log";
+    grid-template-rows: auto 1fr;
+    align-items: start;
+  }
+  .wf-main    { grid-area: main; }
+  .wf-summary { grid-area: summary; }
+  .wf-log     { grid-area: log; }
+}
+
+
+/* ---------------------------------------------------------------------
+   5) TODAY CARD
+   --------------------------------------------------------------------- */
+.wf-summary {
+  padding: var(--card-padding);
+  border-radius: var(--radius);
+  border: 1px solid var(--kcal-color);
+  background: linear-gradient(160deg, rgba(255,157,46,.10), var(--card-color) 60%);
+  box-shadow: 0 0 28px rgba(255,157,46,.16);
+}
+
+.wf-summary-title {
+  margin-bottom: 18px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.wf-kcal {
+  font-size: clamp(52px, 9vw, 80px);
+  font-weight: 700;
+  line-height: 1;
+}
+.wf-kcal span {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--kcal-color);
+}
+
+.wf-macros {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.wf-macro {
+  display: block;
+  padding: 16px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  background: rgba(8,15,29,.55);
+  border: 1px solid var(--macro-color);
+  border-radius: 16px;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--macro-color) 25%, transparent);
+}
+.wf-macro strong {
+  display: block;
+  margin-top: 6px;
+  font-size: clamp(18px, 2.6vw, 24px);
+  font-weight: 700;
+  color: var(--macro-color);
+}
+
+.wf-protein { --macro-color: var(--protein-color); }
+.wf-carbs   { --macro-color: var(--carbs-color); }
+.wf-fat     { --macro-color: var(--fat-color); }
+
+/* Tablet (phone is one column, desktop has its own column):
+   calories left, macros right */
+@media (min-width: 640px) and (max-width: 959px) {
+  .wf-summary {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 48px;
+  }
+  .wf-summary-title { grid-column: 1 / -1; }
+  .wf-macros        { margin-top: 0; }
+}
+
+
+/* ---------------------------------------------------------------------
+   6) SEARCH + QUICK CHIPS
+   --------------------------------------------------------------------- */
+.wf-form {
+  display: flex;
+  gap: 12px;
+}
+
+.wf-input {
+  flex: 1;
+  min-width: 0;
+  padding: 18px 24px;
+  font-size: 16px;                   /* 16px stops iPhone auto-zoom */
+  color: white;
+  background: var(--card-color);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+}
+.wf-input::placeholder { color: #5f7390; }
+.wf-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(34,229,255,.18), 0 0 20px rgba(34,229,255,.15);
+}
+
+.wf-btn {
+  padding: 18px 30px;
+  font: inherit;
+  font-weight: 800;
+  color: #04202a;
+  background: linear-gradient(160deg, #5ff6ff, var(--accent));
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 0 20px rgba(34,229,255,.35);
+  cursor: pointer;
+  transition: transform .12s, filter .15s;
+}
+.wf-btn:hover  { filter: brightness(1.08); }
+.wf-btn:active { transform: scale(.95); }
+
+.wf-btn-ghost {
+  color: white;
+  background: #26354f;
+  box-shadow: none;
+}
+
+/* Quick search chips (رز، دجاج، بيض ...) */
+.wf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.wf-chip {
+  padding: 10px 18px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.wf-chip:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(34,229,255,.08);
+}
+
+.wf-hint {
+  margin-top: 24px;
+  color: var(--text-muted);
+}
+
+
+/* ---------------------------------------------------------------------
+   7) RESULTS
+   --------------------------------------------------------------------- */
+.wf-results {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 18px;
+}
+
+.wf-food {
+  padding: 20px 22px;
+  background: var(--card-color);
+  border: 1px solid var(--card-border);
+  border-left: 4px solid var(--accent);
+  border-radius: 18px;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .2s, border-color .2s;
+}
+.wf-food:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 22px rgba(34,229,255,.18);
+}
+.wf-food:active { transform: scale(.985); }
+
+.wf-food-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.wf-food h4 { min-width: 0; font-size: 15px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+
+.wf-est {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--warn);
+}
+
+.wf-pill {
+  flex: none;
+  padding: 5px 11px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: rgba(255,255,255,.06);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.wf-food-kcal {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  font-size: 30px;
+  font-weight: 700;
+  color: white;
+}
+.wf-food-kcal span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.wf-food-kcal .wf-food-macros {
+  flex-basis: 100%;
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+
+/* ---------------------------------------------------------------------
+   8) MEALS LOG
+   --------------------------------------------------------------------- */
+.wf-log {
+  padding: var(--card-padding);
+  background: var(--card-color);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+}
+
+.wf-log h3 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.wf-empty {                          /* shown when no meals are logged */
+  margin-top: 20px;
+  padding: 30px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  line-height: 1.6;
+  border: 1px dashed var(--card-border);
+  border-radius: 16px;
+}
+
+.wf-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.wf-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: rgba(8,15,29,.55);
+  border-left: 4px solid var(--carbs-color);
+  border-radius: 16px;
+}
+.wf-entry > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+.wf-entry strong { display: block; margin-bottom: 4px; font-size: 14px; }
+.wf-entry span   { font-size: 12px; color: var(--text-muted); }
+
+.wf-entry-right {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+}
+.wf-entry .wf-entry-kcal {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.wf-delete {
+  width: 34px;
+  height: 34px;
+  font: inherit;
+  font-weight: 800;
+  color: var(--danger);
+  background: rgba(255,93,115,.12);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.wf-delete:hover { background: rgba(255,93,115,.26); }
+
+
+/* ---------------------------------------------------------------------
+   9) POPUP
+   --------------------------------------------------------------------- */
+.wf-backdrop {
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(3, 8, 18, .8);
+  backdrop-filter: blur(4px);
+}
+
+.wf-modal {
+  width: 100%;
+  max-width: 460px;
+  padding: 28px 24px calc(26px + env(safe-area-inset-bottom, 0px));
+  background: var(--card-color);
+  border: 1px solid var(--accent);
+  border-bottom: 0;
+  border-radius: 26px 26px 0 0;
+  box-shadow: 0 -10px 40px rgba(34,229,255,.15);
+}
+
+.wf-modal h3 { margin-bottom: 22px; font-size: 19px; line-height: 1.35; }
+
+.wf-modal label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.wf-modal .wf-input {
+  width: 100%;
+  margin-bottom: 24px;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.wf-modal-actions { display: flex; gap: 12px; }
+.wf-modal-actions button { flex: 1; }
+
+@media (min-width: 700px) {
+  .wf-backdrop { align-items: center; }
+  .wf-modal    { border-bottom: 1px solid var(--accent); border-radius: 26px; }
+}
+
+
+/* ---------------------------------------------------------------------
+   10) PHONES (screen narrower than 600px) - tighter spacing, smaller sizes
+   --------------------------------------------------------------------- */
+@media (max-width: 600px) {
+  .wf-root {
+    --side-padding: 14px;            /* page margin left/right */
+    --space: 18px;                   /* gap between big blocks */
+    --card-padding: 16px;            /* inside cards           */
+    --radius: 18px;
+  }
+
+  .wf-page-title { margin: 16px 0 var(--space); font-size: 22px; }
+  .wf-back       { width: 42px; height: 42px; }
+
+  /* Today card */
+  .wf-summary-title { margin-bottom: 12px; }
+  .wf-kcal          { font-size: 52px; }
+  .wf-macros        { gap: 8px; margin-top: 18px; }
+  .wf-macro         { padding: 12px 4px; }
+  .wf-macro strong  { font-size: 18px; }
+
+  /* Search */
+  .wf-form   { gap: 8px; }
+  .wf-input  { padding: 14px 18px; }
+  .wf-btn    { padding: 14px 20px; }
+  .wf-chips  { gap: 8px; margin-top: 14px; }
+  .wf-chip   { padding: 8px 14px; font-size: 13px; }
+
+  /* Results */
+  .wf-results     { margin-top: 20px; gap: 12px; }
+  .wf-food        { padding: 16px 16px; }
+  .wf-food-kcal   { margin-top: 14px; font-size: 26px; }
+
+  /* Meals log */
+  .wf-entries { gap: 10px; margin-top: 14px; }
+  .wf-entry   { padding: 12px 14px; gap: 10px; }
+  .wf-entry-right { gap: 10px; }
+  .wf-empty   { margin-top: 14px; padding: 22px 12px; }
+
+  /* Popup */
+  .wf-modal { padding: 22px 18px calc(22px + env(safe-area-inset-bottom, 0px)); }
+}

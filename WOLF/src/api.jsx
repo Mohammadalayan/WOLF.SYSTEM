@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { loadTodayLog, saveTodayLog } from "./Wolfstorage.jsx";
-
+import "./api.css";
 // =====================================================================
 // قاعدة البيانات المحلية (بدون API)
 // كل الأرقام لكل 100g (أو 100ml) إلا إذا مكتوب serving مختلف.
@@ -378,7 +378,23 @@ function searchFoods(rawQuery) {
     .filter(Boolean)
     .sort((a, b) => b.total - a.total || a.i - b.i)
     .map((x) => x.food);
-}
+}/* =====================================================================
+   Same code as your original. ONLY change: every style={{...}} became
+   a className, and the styles now live in WolfFoodTracker.css.
+   Existing functions and state are unchanged. Added: QUICK_SEARCHES chips
+   (they call your existing searchFoods), a wrapper layout, and an empty
+   message for the meals log.
+
+   Replace from the line `export default function WolfFoodTracker() {` to the end
+   of your file with this. Everything above it (the database, normalize,
+   searchFoods) stays untouched.
+
+   And add this line at the top of your file:
+     import "./WolfFoodTracker.css";
+   ===================================================================== */
+
+// Quick search chips shown under the search box (edit this list as you like)
+const QUICK_SEARCHES = ["رز", "دجاج", "بيض", "لبنة", "خبز", "موز", "تونة", "قهوة", "حمص", "شوفان"];
 
 export default function WolfFoodTracker() {
   const [query, setQuery] = useState("");
@@ -437,110 +453,146 @@ export default function WolfFoodTracker() {
     setDailyLog((prevLog) => prevLog.filter((entry) => entry.id !== id));
   }
 
+  // Quick chip: fills the search box and searches (uses the same searchFoods)
+  function handleQuickSearch(term) {
+    setQuery(term);
+    setResults(searchFoods(term));
+    setSearched(true);
+  }
+
   const totalCalories = dailyLog.reduce((sum, item) => sum + item.calories, 0);
   const totalProtein = dailyLog.reduce((sum, item) => sum + item.protein, 0).toFixed(1);
   const totalCarbs = dailyLog.reduce((sum, item) => sum + item.carbs, 0).toFixed(1);
   const totalFat = dailyLog.reduce((sum, item) => sum + item.fat, 0).toFixed(1);
+  const BackArrow = () => (
+  <svg width="38" height="30" viewBox="0 0 38 30" fill="none" stroke="#9fb0c3" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M36 15H4M15 4L4 15l11 11" />
+  </svg>
+);
 
   return (
-    <div style={{ padding: "30px", color: "#fff", background: "#0a1322", minHeight: "100vh", fontFamily: "sans-serif" }}>
-      <h2>WOLF - Precise Daily Nutrition Tracker</h2>
+    <div className="wf-root">
+      <a href="/" className="wf-back"><BackArrow /></a>
+      <h2 className="wf-page-title">WOLF - Precise Daily Nutrition Tracker</h2>
 
-      <div style={{ background: "#111827", padding: "20px", borderRadius: "10px", border: "1px solid #1f2937", marginBottom: "25px", maxWidth: "520px" }}>
-        <h3 style={{ margin: "0 0 10px 0", color: "#22e5ff" }}>سجل اليوم (Today's Total)</h3>
-        <p style={{ fontSize: "28px", fontWeight: "bold", margin: "0 0 10px 0" }}>
-          {totalCalories} <span style={{ fontSize: "16px", color: "#888" }}>kcal</span>
-        </p>
-        <div style={{ display: "flex", gap: "20px", color: "#aaa", fontSize: "14px" }}>
-          <span>بروتين: <strong style={{ color: "#fff" }}>{totalProtein}g</strong></span>
-          <span>كارب: <strong style={{ color: "#fff" }}>{totalCarbs}g</strong></span>
-          <span>دهون: <strong style={{ color: "#fff" }}>{totalFat}g</strong></span>
+      <div className="wf-layout">
+        {/* ---------- Today's total ---------- */}
+        <div className="wf-summary">
+          <h3 className="wf-summary-title">سجل اليوم (Today's Total)</h3>
+          <p className="wf-kcal">
+            {totalCalories} <span>kcal</span>
+          </p>
+          <div className="wf-macros">
+            <span className="wf-macro wf-protein">بروتين: <strong>{totalProtein}g</strong></span>
+            <span className="wf-macro wf-carbs">كارب: <strong>{totalCarbs}g</strong></span>
+            <span className="wf-macro wf-fat">دهون: <strong>{totalFat}g</strong></span>
+          </div>
+        </div>
+
+        {/* ---------- Search + results ---------- */}
+        <div className="wf-main">
+          <form onSubmit={handleSearch} className="wf-form">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="ابحث عن أكلة... (rice, roz, رز, basmati)"
+              className="wf-input"
+            />
+            <button type="submit" className="wf-btn">
+              بحث
+            </button>
+          </form>
+
+          <div className="wf-chips">
+            {QUICK_SEARCHES.map((term) => (
+              <button
+                key={term}
+                type="button"
+                className="wf-chip"
+                onClick={() => handleQuickSearch(term)}
+              >
+                {term}
+              </button>
+            ))}
+          </div>
+
+          {searched && results.length === 0 && (
+            <p className="wf-hint">ما لقينا شي بهالاسم. جرّب كلمة تانية (عربي أو إنجليزي).</p>
+          )}
+
+          <div className="wf-results">
+            {results.map((item, index) => (
+              <div
+                key={`${item.name}-${index}`}
+                onClick={() => handleSelectItem(item)}
+                className="wf-food"
+              >
+                <div className="wf-food-top">
+                  <h4>
+                    {item.name}
+                    {item.estimate && <span className="wf-est">≈ تقدير</span>}
+                  </h4>
+                  <span className="wf-pill">
+                    {item.serving}
+                  </span>
+                </div>
+                <p className="wf-food-kcal">
+                  {item.calories} <span>kcal</span>
+                  <span className="wf-food-macros">
+                    P {item.protein} | C {item.carbs} | F {item.fat}
+                  </span>
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ---------- Meals log (always visible) ---------- */}
+        <div className="wf-log">
+          <h3>الوجبات المسجلة اليوم</h3>
+          {dailyLog.length === 0 ? (
+            <p className="wf-empty">ما سجلت أي وجبة لسا اليوم. ابحث عن أكلة وأضفها.</p>
+          ) : (
+            <div className="wf-entries">
+              {dailyLog.map((entry) => (
+                <div key={entry.id} className="wf-entry">
+                  <div>
+                    <strong>{entry.name} ({entry.amountGrams}g)</strong>
+                    <span>P: {entry.protein}g | C: {entry.carbs}g | F: {entry.fat}g</span>
+                  </div>
+                  <div className="wf-entry-right">
+                    <span className="wf-entry-kcal">{entry.calories} kcal</span>
+                    <button onClick={() => handleDeleteEntry(entry.id)} className="wf-delete">X</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      <form onSubmit={handleSearch} style={{ display: "flex", gap: "10px", maxWidth: "520px" }}>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="ابحث عن أكلة... (rice, roz, رز, basmati)"
-          style={{ padding: "12px", borderRadius: "8px", border: "1px solid #333", background: "#111", color: "#fff", flex: 1, fontSize: "16px" }}
-        />
-        <button type="submit" style={{ padding: "12px 20px", background: "#22e5ff", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", color: "#000" }}>
-          بحث
-        </button>
-      </form>
-
-      {searched && results.length === 0 && (
-        <p style={{ marginTop: "20px", color: "#aaa", maxWidth: "520px" }}>ما لقينا شي بهالاسم. جرّب كلمة تانية (عربي أو إنجليزي).</p>
-      )}
-
-      <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "12px", maxWidth: "520px" }}>
-        {results.map((item, index) => (
-          <div
-            key={`${item.name}-${index}`}
-            onClick={() => handleSelectItem(item)}
-            style={{ background: "#111", padding: "16px", borderRadius: "8px", border: "1px solid #222", cursor: "pointer", transition: "0.2s" }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
-              <h4 style={{ margin: "0", color: "#fff" }}>
-                {item.name}
-                {item.estimate && <span style={{ color: "#f59e0b", fontSize: "12px", marginLeft: "6px" }}>≈ تقدير</span>}
-              </h4>
-              <span style={{ background: "#15803d", color: "#22e5ff", padding: "4px 8px", borderRadius: "4px", fontSize: "12px", whiteSpace: "nowrap" }}>
-                {item.serving}
-              </span>
-            </div>
-            <p style={{ color: "#22e5ff", fontSize: "18px", fontWeight: "bold", margin: "8px 0 0 0" }}>
-              {item.calories} <span style={{ fontSize: "12px", color: "#888" }}>kcal</span>
-              <span style={{ fontSize: "12px", color: "#888", marginLeft: "10px" }}>
-                P {item.protein} | C {item.carbs} | F {item.fat}
-              </span>
-            </p>
-          </div>
-        ))}
-      </div>
-
+      {/* ---------- Popup: choose the amount ---------- */}
       {selectedItem && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <div style={{ background: "#111827", padding: "25px", borderRadius: "12px", width: "320px", border: "1px solid #374151" }}>
-            <h3 style={{ margin: "0 0 15px 0", color: "#fff" }}>{selectedItem.name}</h3>
-            <label style={{ display: "block", color: "#aaa", marginBottom: "8px", fontSize: "14px" }}>أدخل الكمية / الوزن (بالغرام):</label>
+        <div className="wf-backdrop">
+          <div className="wf-modal">
+            <h3>{selectedItem.name}</h3>
+            <label>أدخل الكمية / الوزن (بالغرام):</label>
             <input
               type="number"
               min="1"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #4b5563", background: "#1f2937", color: "#fff", fontSize: "16px", marginBottom: "15px", boxSizing: "border-box" }}
+              className="wf-input"
             />
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={handleAddFood} style={{ flex: 1, padding: "10px", background: "#22e5ff", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", color: "#000" }}>
+            <div className="wf-modal-actions">
+              <button onClick={handleAddFood} className="wf-btn">
                 حفظ وإضافة
               </button>
-              <button onClick={() => setSelectedItem(null)} style={{ flex: 1, padding: "10px", background: "#374151", border: "none", borderRadius: "6px", color: "#fff", cursor: "pointer" }}>
+              <button onClick={() => setSelectedItem(null)} className="wf-btn wf-btn-ghost">
                 إلغاء
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {dailyLog.length > 0 && (
-        <div style={{ marginTop: "35px", maxWidth: "520px" }}>
-          <h3 style={{ color: "#fff", borderBottom: "1px solid #333", paddingBottom: "8px" }}>الوجبات المسجلة اليوم</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "15px" }}>
-            {dailyLog.map((entry) => (
-              <div key={entry.id} style={{ background: "#1f2937", padding: "12px 16px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <strong style={{ color: "#fff", display: "block" }}>{entry.name} ({entry.amountGrams}g)</strong>
-                  <span style={{ color: "#aaa", fontSize: "12px" }}>P: {entry.protein}g | C: {entry.carbs}g | F: {entry.fat}g</span>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <span style={{ color: "#22e5ff", fontWeight: "bold" }}>{entry.calories} kcal</span>
-                  <button onClick={() => handleDeleteEntry(entry.id)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "bold" }}>X</button>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       )}

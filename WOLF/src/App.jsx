@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Workout from './workout.jsx';
+import Workout from './WorkoutTimer.jsx';
 import FitnessHome from './FitnessHome.jsx';
 import Apifetch from './api.jsx';
 
