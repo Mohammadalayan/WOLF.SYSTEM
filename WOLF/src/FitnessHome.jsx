@@ -76,13 +76,6 @@ export default function FitnessHome({
   onNavigate = () => {},
   activeTab = "home",
 }) {
-  const tabs = [
-    { id: "home", label: "Home", Icon: Home },
-    { id: "workout", label: "Workout", Icon: Dumbbell },
-    { id: "guide", label: "Guide", Icon: Book },
-    { id: "profile", label: "Profile", Icon: User },
-  ];
-
   // نفس بيانات صفحة الأكل (WOLF): بتنقرأ كل ما الصفحة تنفتح
   const totals = getTodayTotals();
 
@@ -175,22 +168,43 @@ export default function FitnessHome({
             </div>
           </main>
 
-          {/* Bottom nav */}
+          {/* Bottom nav: 4 icon buttons */}
           <nav className="fh-nav" aria-label="Main">
-            {tabs.map(({ id, label, Icon }, i) => (
-              <React.Fragment key={id}>
-                {i > 0 && <span className="fh-sep" aria-hidden="true" />}
-                <button
-                  className="fh-tab"
-                  aria-label={label}
-                  aria-current={activeTab === id ? "page" : undefined}
-                  onClick={() => onNavigate(id)}
-                >
-                  <Icon active={activeTab === id} />
-                  <span className="fh-tab-label">{label}</span>
-                </button>
-              </React.Fragment>
-            ))}
+           <a href="/"> <button
+              className="fh-tab"
+              aria-label="Home"
+              aria-current={activeTab === "home" ? "page" : undefined}
+              onClick={() => onNavigate("home")}
+            >
+              <Home active={activeTab === "home"} />
+            </button>
+</a>
+            <a href="/workout"> <button
+              className="fh-tab"
+              aria-label="Workout"
+              aria-current={activeTab === "workout" ? "page" : undefined}
+              onClick={() => onNavigate("workout")}
+            >
+              <Dumbbell active={activeTab === "workout"} />
+            </button></a>
+
+            <button
+              className="fh-tab"
+              aria-label="Guide"
+              aria-current={activeTab === "guide" ? "page" : undefined}
+              onClick={() => onNavigate("guide")}
+            >
+              <Book active={activeTab === "guide"} />
+            </button>
+
+            <button
+              className="fh-tab"
+              aria-label="Profile"
+              aria-current={activeTab === "profile" ? "page" : undefined}
+              onClick={() => onNavigate("profile")}
+            >
+              <User active={activeTab === "profile"} />
+            </button>
           </nav>
 
         </div>

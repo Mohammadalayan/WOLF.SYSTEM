@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Route } from "react-router-dom";
+import "./workout.css";
+
 /* ---------- Icons ---------- */
 const BackArrow = () => (
   <svg width="38" height="30" viewBox="0 0 38 30" fill="none" stroke="#9fb0c3" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -29,13 +30,14 @@ export default function WorkoutTimer({
   exercise = "INCLINE DUMBBELL PRESS",
   target = "Upper Chest",
   rest = 90,
-  video = "/dumbbell_press.mp4", // put the file in /public
-  image = null,                  // optional: use an image instead of the video
+  totalSets = 4,                 // number of set buttons under the timer
+  gif = "/dumbbell_press.gif",   // put the GIF in /public
   onBack = () => {},
 }) {
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(false);
-  const [videoFailed, setVideoFailed] = useState(false);
+  const [gifFailed, setGifFailed] = useState(false);
+  const [doneSets, setDoneSets] = useState(0);   // how many sets are finished
   const base = useRef(0);
   const t0 = useRef(0);
 
@@ -60,42 +62,80 @@ export default function WorkoutTimer({
     setElapsed(0);
   };
 
+  // Tap a set number: marks sets 1..n as done. Tap the last done set again to undo it.
+  const toggleSet = (i) => setDoneSets(i + 1 === doneSets ? i : i + 1);
+
+  // ---- values used only for the design ----
+  const text = format(elapsed);                              // "MM:SS:CC"
+  const status = running ? "running" : elapsed > 0 ? "paused" : "ready";
+  const progress = (elapsed % 60000) / 60000;                // ring fills once per minute
+
   return (
     <div className="wt-root">
-      <style>{css}</style>
-
       <div className="wt-layout">
+
+        {/* Top bar: back + status */}
         <header className="wt-top">
-        <a href="/" >   <button className="wt-back" onClick={onBack} aria-label="Back">
-             <BackArrow />
-          </button></a>
-          <time className="wt-time">{format(elapsed)}</time>
+          <a href="/" className="wt-back" onClick={onBack} aria-label="Back">
+            <BackArrow />
+          </a>
+          <span className="wt-status" data-status={status}>
+            <i className="wt-dotlive" aria-hidden="true" />
+            {status.toUpperCase()}
+          </span>
         </header>
 
+        {/* Exercise card */}
         <section className="wt-card">
           <h1>{exercise}</h1>
           <p>Target: {target} | Rest: {rest}s</p>
         </section>
 
+        {/* GIF */}
         <div className="wt-figure">
-          {image ? (
-            <img src={image} alt={exercise} />
-          ) : videoFailed ? (
-            <p className="wt-missing">Video not found: {video}</p>
+          {gifFailed ? (
+            <p className="wt-missing">GIF not found: {gif}</p>
           ) : (
-            <video
-              src={video}
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="auto"
-              aria-label={exercise}
-              onError={() => setVideoFailed(true)}
-            />
+            <img src={gif} alt={exercise} draggable="false" onError={() => setGifFailed(true)} />
           )}
         </div>
 
+        {/* Big timer with progress ring */}
+        <div className="wt-timer">
+          <svg className="wt-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <circle className="wt-ring-track" cx="60" cy="60" r="54" />
+            <circle
+              className="wt-ring-bar"
+              cx="60" cy="60" r="54"
+              pathLength="100"
+              style={{ strokeDashoffset: 100 - progress * 100 }}
+            />
+          </svg>
+          <time className="wt-time">
+            <span className="wt-digits">{text.slice(0, 5)}</span>
+            <span className="wt-cs">.{text.slice(6)}</span>
+          </time>
+        </div>
+
+        {/* Sets */}
+        <div className="wt-sets">
+          <span className="wt-sets-label">SETS {doneSets}/{totalSets}</span>
+          <div className="wt-dots">
+            {Array.from({ length: totalSets }, (_, i) => (
+              <button
+                key={i}
+                className={"wt-set" + (i < doneSets ? " is-done" : "")}
+                onClick={() => toggleSet(i)}
+                aria-label={`Set ${i + 1}`}
+                aria-pressed={i < doneSets}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Controls */}
         <div className="wt-controls">
           <div className="wt-ctl">
             <button className="wt-btn wt-reset" onClick={reset} aria-label="Reset"><Reset /></button>
@@ -110,103 +150,8 @@ export default function WorkoutTimer({
             <span>STOP</span>
           </div>
         </div>
+
       </div>
     </div>
   );
 }
-
-const css = `
-/* Neutralise default Vite / CRA page styles so the screen can fill the window */
-html,body,#root{margin:0;padding:0;width:100%;height:100%;max-width:none;display:block;text-align:left;background:#0a1322}
-
-.wt-root{
-  --bg:#0a1322; --card:#16223a; --edge:#1f4a5a; --muted:#9fb0c3;
-  --gap:clamp(12px,2.4vh,28px);
-  --btn:clamp(54px,14vmin,84px);
-  --btn-main:clamp(74px,21vmin,112px);
-  position:fixed; inset:0; overflow-y:auto; overflow-x:hidden;
-  background:var(--bg); color:#fff;
-  font-family:Inter,"SF Pro Text",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  -webkit-text-size-adjust:100%;
-}
-.wt-root *{box-sizing:border-box;margin:0}
-
-.wt-layout{
-  min-height:100%; width:100%;
-  display:flex; flex-direction:column; gap:var(--gap);
-  padding:
-    calc(clamp(12px,3vw,32px) + env(safe-area-inset-top,0px))
-    calc(clamp(12px,3vw,40px) + env(safe-area-inset-right,0px))
-    calc(clamp(16px,3vh,32px) + env(safe-area-inset-bottom,0px))
-    calc(clamp(12px,3vw,40px) + env(safe-area-inset-left,0px));
-}
-
-.wt-top{grid-area:top;display:flex;justify-content:space-between;align-items:center}
-.wt-back{background:none;border:0;cursor:pointer;padding:6px;display:grid;place-items:center}
-.wt-time{font-size:clamp(17px,2.4vw,30px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.3px}
-
-.wt-card{
-  grid-area:card;
-  background:var(--card);border:1px solid var(--edge);border-radius:16px;
-  padding:clamp(14px,2.4vh,26px) 14px;text-align:center;
-}
-.wt-card h1{font-size:clamp(18px,3.2vw,34px);font-weight:700;letter-spacing:.2px;line-height:1.2}
-.wt-card p{margin-top:6px;font-size:clamp(12px,1.6vw,17px);color:var(--muted)}
-
-.wt-figure{
-  grid-area:figure;
-  position:relative; flex:1; min-height:clamp(200px,34vh,520px);
-  border-radius:16px; overflow:hidden;
-}
-.wt-figure video,.wt-figure img{
-  position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
-}
-.wt-missing{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:16px}
-
-.wt-controls{
-  grid-area:controls;
-  display:flex; justify-content:center; align-items:flex-end;
-  gap:clamp(18px,6vw,56px); margin-top:auto;
-}
-.wt-ctl{display:flex;flex-direction:column;align-items:center;gap:8px}
-.wt-ctl span{font-size:clamp(10px,1.3vw,13px);font-weight:700;letter-spacing:1.4px;color:var(--muted)}
-.wt-ctl-main span{color:#00f0ff}
-
-.wt-btn{
-  display:grid;place-items:center;
-  width:var(--btn);height:var(--btn);border-radius:50%;border:0;cursor:pointer;color:#fff;
-  background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.04));
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 8px 18px rgba(0,0,0,.45);
-}
-.wt-btn svg{width:42%;height:42%}
-.wt-start{
-  width:var(--btn-main);height:var(--btn-main);color:#041a21;
-  background:linear-gradient(160deg,#5ff6ff 0%,#00d4e6 100%);
-  box-shadow:0 0 0 6px rgba(0,240,255,.12),0 0 28px rgba(0,240,255,.55),0 10px 22px rgba(0,0,0,.5);
-}
-.wt-start svg{width:40%;height:40%;margin-left:4%}
-.wt-stop{color:#ffb02e;box-shadow:inset 0 0 0 1.5px rgba(245,158,11,.75),0 0 18px rgba(245,158,11,.3),0 8px 18px rgba(0,0,0,.45)}
-.wt-reset{color:#cfd6e3}
-.wt-btn:disabled{opacity:.4;cursor:default;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
-.wt-start:disabled{background:linear-gradient(160deg,#2a8f99,#1a6a73);color:#0a2a30}
-.wt-btn:focus-visible,.wt-back:focus-visible{outline:2px solid #fff;outline-offset:4px}
-@media (prefers-reduced-motion:no-preference){
-  .wt-btn{transition:transform .12s,filter .15s,box-shadow .2s}
-  .wt-btn:not(:disabled):active{transform:scale(.92)}
-  .wt-btn:not(:disabled):hover{filter:brightness(1.12)}
-}
-
-/* Wide screens and phones in landscape: video on the left, info + controls on the right */
-@media (min-width:900px), (orientation:landscape) and (max-height:520px){
-  .wt-layout{
-    display:grid;
-    grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
-    grid-template-rows:auto auto 1fr;
-    grid-template-areas:"top top" "figure card" "figure controls";
-    column-gap:clamp(16px,3vw,48px);
-    height:100%;
-  }
-  .wt-figure{min-height:0}
-  .wt-controls{margin-top:0;align-self:center}
-}
-`;

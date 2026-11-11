@@ -1,0 +1,476 @@
+/* =====================================================================
+   WorkoutTimer.css  -  "next level" look (same style as FitnessHome)
+   Sections: 1) Settings  2) Page  3) Top bar  4) Exercise card  5) Video
+             6) Timer ring  7) Sets  8) Control buttons  9) Wide screens
+   ===================================================================== */
+
+
+/* ---------------------------------------------------------------------
+   1) SETTINGS - change colors and sizes HERE
+   --------------------------------------------------------------------- */
+.wt-root {
+  --bg: #070e1c;
+  --card: #121d33;
+  --edge: #25344f;
+  --muted: #8fa3bb;
+
+  --cyan: #22e5ff;               /* main accent        */
+  --orange: #ffb02e;             /* STOP / paused      */
+  --green: #19d68c;              /* running            */
+  --purple: #a78bfa;
+
+  --gap: clamp(14px, 2.4vh, 28px);                       /* space between blocks   */
+  --page-x: clamp(14px, 3.5vw, 44px);                    /* left/right page margin */
+
+  --ring-size: min(62vw, clamp(170px, 28vh, 270px));     /* size of the timer ring */
+  --btn: clamp(54px, 13vmin, 80px);                      /* RESET / STOP size      */
+  --btn-main: clamp(76px, 19vmin, 104px);                /* START size             */
+}
+
+
+/* ---------------------------------------------------------------------
+   2) PAGE
+   --------------------------------------------------------------------- */
+
+/* Removes default Vite margins so the screen can fill the window */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  display: block;
+  text-align: left;
+  background: #070e1c;
+}
+
+.wt-root,
+.wt-root * { box-sizing: border-box; }   /* padding never makes things wider than the screen */
+.wt-root * { margin: 0; }
+
+.wt-root {
+  position: fixed;                       /* stuck to the 4 edges of the window */
+  top: 0; right: 0; bottom: 0; left: 0;
+  overflow-x: hidden;
+  overflow-y: auto;                      /* scroll only if the screen is too short */
+  color: #fff;
+  font-family: Inter, "SF Pro Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  background:
+    radial-gradient(700px 420px at 0% -80px, rgba(34,229,255,.16), transparent 70%),
+    radial-gradient(700px 480px at 100% 100%, rgba(139,124,246,.14), transparent 70%),
+    var(--bg);
+}
+
+/* Phone layout: everything stacked top to bottom */
+.wt-layout {
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding:
+    calc(clamp(12px, 3vw, 28px) + env(safe-area-inset-top, 0px))
+    calc(var(--page-x) + env(safe-area-inset-right, 0px))
+    calc(clamp(18px, 3vh, 34px) + env(safe-area-inset-bottom, 0px))
+    calc(var(--page-x) + env(safe-area-inset-left, 0px));
+}
+
+
+/* ---------------------------------------------------------------------
+   3) TOP BAR - back button + status pill
+   --------------------------------------------------------------------- */
+.wt-top {
+  grid-area: top;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wt-back {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 1px solid var(--edge);
+  text-decoration: none;
+}
+.wt-back svg { width: 22px; height: 18px; }
+
+/* READY / RUNNING / PAUSED pill (color comes from data-status) */
+.wt-status {
+  --state-color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  color: var(--state-color);
+  background: color-mix(in srgb, var(--state-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--state-color) 45%, transparent);
+  border-radius: 999px;
+}
+.wt-status[data-status="running"] { --state-color: var(--green); }
+.wt-status[data-status="paused"]  { --state-color: var(--orange); }
+
+.wt-dotlive {                            /* the small dot inside the pill */
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--state-color);
+  box-shadow: 0 0 10px var(--state-color);
+}
+.wt-status[data-status="running"] .wt-dotlive { animation: wt-blink 1.2s ease-in-out infinite; }
+
+
+/* ---------------------------------------------------------------------
+   4) EXERCISE CARD
+   --------------------------------------------------------------------- */
+.wt-card {
+  grid-area: card;
+  padding: clamp(18px, 2.8vh, 28px) 16px;
+  text-align: center;
+  background:
+    linear-gradient(135deg, rgba(34,229,255,.14), rgba(139,124,246,.12) 60%, rgba(18,29,51,0)),
+    var(--card);
+  border: 1px solid rgba(34,229,255,.35);
+  border-radius: 22px;
+  box-shadow: 0 0 34px rgba(34,229,255,.1);
+}
+
+.wt-card h1 {
+  font-size: clamp(19px, 3.4vw, 34px);
+  font-weight: 800;
+  letter-spacing: .4px;
+  line-height: 1.2;
+}
+.wt-card h1::before {                    /* small label above the title (edit text here) */
+  content: "CURRENT EXERCISE";
+  display: block;
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.4px;
+  color: var(--cyan);
+}
+
+.wt-card p {
+  margin-top: 8px;
+  font-size: clamp(12px, 1.6vw, 17px);
+  color: var(--muted);
+}
+
+
+/* ---------------------------------------------------------------------
+   5) GIF - no frame, it floats on the page (the GIF has a transparent background)
+   --------------------------------------------------------------------- */
+.wt-figure {
+  grid-area: figure;
+  position: relative;
+  flex: 1;
+  min-height: clamp(200px, 24vh, 510px);
+}
+
+.wt-figure img {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;               /* whole GIF always visible, never cropped */
+  object-position: center;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  filter: drop-shadow(0 14px 28px rgba(34,229,255,.10));   /* soft cyan light under the figure */
+}
+
+.wt-missing {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--muted);
+}
+
+
+/* ---------------------------------------------------------------------
+   6) TIMER - big digits inside a ring that fills once per minute
+   --------------------------------------------------------------------- */
+.wt-timer {
+  grid-area: timer;
+  position: relative;
+  width: var(--ring-size);
+  height: var(--ring-size);
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+}
+
+.wt-ring {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);             /* ring starts at the top */
+}
+
+.wt-ring circle { fill: none; stroke-width: 5; }
+.wt-ring-track  { stroke: rgba(255,255,255,.07); }
+.wt-ring-bar {
+  stroke: var(--cyan);
+  stroke-linecap: round;
+  stroke-dasharray: 100;                 /* pathLength is 100, so this = full circle */
+  filter: drop-shadow(0 0 5px rgba(34,229,255,.8));
+}
+
+.wt-time {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  font-variant-numeric: tabular-nums;    /* all digits same width = no jumping */
+}
+.wt-digits {
+  font-size: calc(var(--ring-size) * .24);
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-shadow: 0 0 24px rgba(34,229,255,.35);
+}
+.wt-cs {                                 /* the small .78 part */
+  font-size: calc(var(--ring-size) * .1);
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+
+/* ---------------------------------------------------------------------
+   7) SETS - tap the numbers to mark sets as done
+   --------------------------------------------------------------------- */
+.wt-sets {
+  grid-area: sets;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.wt-sets-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+
+.wt-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.wt-set {
+  width: 46px;
+  height: 46px;
+  font: inherit;
+  font-weight: 800;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.wt-set.is-done {                        /* finished set */
+  color: #04202a;
+  background: linear-gradient(160deg, #6ff7ff, var(--cyan));
+  border-color: transparent;
+  box-shadow: 0 0 18px rgba(34,229,255,.5);
+}
+
+
+/* ---------------------------------------------------------------------
+   8) CONTROL BUTTONS - RESET | START | STOP
+   --------------------------------------------------------------------- */
+.wt-controls {
+  grid-area: controls;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: clamp(20px, 6vw, 56px);
+  margin-top: auto;                      /* pushes the row to the bottom */
+  padding-top: 6px;
+}
+
+.wt-ctl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.wt-ctl span {
+  font-size: clamp(10px, 1.3vw, 13px);
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: var(--muted);
+}
+.wt-ctl-main span { color: var(--cyan); }
+
+/* Shared look: round, glassy */
+.wt-btn {
+  display: grid;
+  place-items: center;
+  width: var(--btn);
+  height: var(--btn);
+  font: inherit;
+  color: #fff;
+  background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
+  border: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 8px 18px rgba(0,0,0,.45);
+  cursor: pointer;
+}
+.wt-btn svg { width: 42%; height: 42%; }
+
+/* START: big cyan, pulsing ring while waiting for you */
+.wt-start {
+  width: var(--btn-main);
+  height: var(--btn-main);
+  color: #041a21;
+  background: linear-gradient(160deg, #6ff7ff 0%, #00d4e6 100%);
+  box-shadow: 0 0 0 6px rgba(0,240,255,.12), 0 0 28px rgba(0,240,255,.55), 0 10px 22px rgba(0,0,0,.5);
+}
+.wt-start svg { width: 40%; height: 40%; margin-left: 4%; }   /* nudge so the triangle looks centered */
+.wt-start:not(:disabled) { animation: wt-pulse 2.4s ease-out infinite; }
+
+/* STOP: orange ring */
+.wt-stop {
+  color: var(--orange);
+  box-shadow: inset 0 0 0 1.5px rgba(245,158,11,.75), 0 0 18px rgba(245,158,11,.3), 0 8px 18px rgba(0,0,0,.45);
+}
+
+.wt-reset { color: #cfd6e3; }
+
+/* Disabled (START while running / STOP while stopped) */
+.wt-btn:disabled {
+  opacity: .4;
+  cursor: default;
+  animation: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+}
+.wt-start:disabled { background: linear-gradient(160deg, #2a8f99, #1a6a73); color: #0a2a30; }
+
+
+/* ---------------------------------------------------------------------
+   9) HOVER, PRESS, KEYBOARD FOCUS (all buttons and links)
+   Hover is inside (hover: hover) so phones don't get a "stuck" hover.
+   --------------------------------------------------------------------- */
+.wt-back, .wt-btn, .wt-set {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform .18s, filter .18s, box-shadow .2s, background-color .2s, border-color .2s, color .2s;
+}
+
+.wt-back:focus-visible,
+.wt-btn:focus-visible,
+.wt-set:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 4px;
+}
+
+@media (hover: hover) {
+  .wt-back:hover { border-color: var(--cyan); transform: translateX(-3px); }
+
+  .wt-btn:not(:disabled):hover { transform: translateY(-3px); filter: brightness(1.15); }
+  .wt-start:not(:disabled):hover {
+    box-shadow: 0 0 0 7px rgba(0,240,255,.18), 0 0 40px rgba(0,240,255,.75), 0 14px 28px rgba(0,0,0,.5);
+  }
+  .wt-stop:not(:disabled):hover {
+    box-shadow: inset 0 0 0 1.5px var(--orange), 0 0 26px rgba(245,158,11,.5), 0 12px 24px rgba(0,0,0,.45);
+  }
+
+  .wt-set:not(.is-done):hover { color: #fff; border-color: var(--cyan); transform: translateY(-2px); }
+  .wt-set.is-done:hover       { transform: translateY(-2px); filter: brightness(1.1); }
+}
+
+.wt-back:active,
+.wt-btn:not(:disabled):active,
+.wt-set:active { transform: scale(.92); }
+
+
+/* ---------------------------------------------------------------------
+   10) ANIMATIONS
+   --------------------------------------------------------------------- */
+@keyframes wt-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .3; }
+}
+@keyframes wt-pulse {                    /* soft ring around START */
+  0%   { box-shadow: 0 0 0 6px rgba(0,240,255,.12), 0 0 28px rgba(0,240,255,.55), 0 0 0 6px rgba(0,240,255,.35); }
+  70%  { box-shadow: 0 0 0 6px rgba(0,240,255,.12), 0 0 28px rgba(0,240,255,.55), 0 0 0 22px rgba(0,240,255,0); }
+  100% { box-shadow: 0 0 0 6px rgba(0,240,255,.12), 0 0 28px rgba(0,240,255,.55), 0 0 0 6px rgba(0,240,255,0); }
+}
+@keyframes wt-rise {                     /* blocks slide up when the page opens */
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .wt-card, .wt-figure, .wt-timer, .wt-sets, .wt-controls {
+    animation: wt-rise .6s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .wt-figure   { animation-delay: .08s; }
+  .wt-timer    { animation-delay: .14s; }
+  .wt-sets     { animation-delay: .2s; }
+  .wt-controls { animation-delay: .26s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wt-dotlive, .wt-start { animation: none !important; }
+  .wt-back, .wt-btn, .wt-set { transition: none; }
+}
+
+
+/* ---------------------------------------------------------------------
+   11) WIDE SCREENS and PHONES IN LANDSCAPE
+   Video on the left, everything else stacked on the right:
+        [ top bar                ]
+        [ video   |  card        ]
+        [ video   |  timer       ]
+        [ video   |  sets        ]
+        [ video   |  buttons     ]
+   --------------------------------------------------------------------- */
+@media (min-width: 900px), (orientation: landscape) and (max-height: 520px) {
+  .wt-root { --ring-size: clamp(130px, 30vh, 280px); }
+
+  .wt-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto 1fr;
+    grid-template-areas:
+      "top    top"
+      "figure card"
+      "figure timer"
+      "figure sets"
+      "figure controls";
+    column-gap: clamp(16px, 3vw, 48px);
+    height: 100%;
+  }
+
+  .wt-figure   { min-height: 0; }
+  .wt-controls { margin-top: 0; align-self: center; }
+}
+
+
+/* ---------------------------------------------------------------------
+   12) SMALL PHONES (under 400px)
+   --------------------------------------------------------------------- */
+@media (max-width: 400px) {
+  .wt-back { width: 44px; height: 44px; }
+  .wt-set  { width: 42px; height: 42px; }
+  .wt-dots { gap: 10px; }
+}
